@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kirandg/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true kirandg/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t kirandg/multi-client ./client
+  - docker build -t kirandg/multi-nginx ./nginx
+  - docker build -t kirandg/multi-server ./server
+  - docker build -t kirandg/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push kirandg/multi-client
+  - docker push kirandg/multi-nginx
+  - docker push kirandg/multi-server
+  - docker push kirandg/multi-worker
